@@ -1,4 +1,4 @@
-// Coletor de Relíquias - Tribal Wars BR v5 - Versão Bookmarklet
+// Coletor de Relíquias - Tribal Wars BR v1 - Versão Bookmarklet
 (function() {
     'use strict';
 
@@ -513,7 +513,7 @@
         p.innerHTML = `
         <div class="rp-header">
             <span style="font-size:19px;">⚔️</span>
-            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v5</span></span>
+            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v0.1</span></span>
             <span id="rp-status" style="font-size:11px;padding:3px 11px;background:#dc2626;color:#fff;border-radius:20px;font-weight:700;">INATIVO</span>
             <button id="rp-close" style="margin-left:9px;background:#1f1f35;border:none;color:#9ca3af;font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:6px;">✖</button>
         </div>
@@ -897,3 +897,4 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
+
