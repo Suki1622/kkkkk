@@ -57,14 +57,32 @@
         return m ? m[1] : null;
     }
 
+    // ========== FUNÇÃO DETERMINAR QUALIDADE CORRIGIDA ==========
     function determinarQualidade(nome) {
         const n = (nome || '').toLowerCase();
-        if (n.includes('aprimorada') || n.includes('refined')) return 'refined';
-        if (n.includes('básica') || n.includes('basica') || n.includes('polished')) return 'polished';
+        
+        // PRIORIDADE MÁXIMA: Se tem "aprimorado" no nome, é AZUL (refined)
+        if (n.includes('aprimorado') || n.includes('aprimorada') || 
+            n.includes('refined') || n.includes('refinada') ||
+            n.includes('perfeito') || n.includes('perfeita') ||
+            n.includes('melhorado') || n.includes('melhorada')) {
+            return 'refined';
+        }
+        
+        // Básica / Polished (verde)
+        if (n.includes('básica') || n.includes('basica') || 
+            n.includes('básico') || n.includes('basico') ||
+            n.includes('polished')) {
+            return 'polished';
+        }
+        
+        // Má Qualidade / Shoddy (cinza)
         return 'cinza';
     }
 
-    function qualidadePeso(q) { return q === 'refined' ? 3 : q === 'polished' ? 2 : 1; }
+    function qualidadePeso(q) { 
+        return q === 'refined' ? 3 : q === 'polished' ? 2 : 1; 
+    }
 
     function calcularDistancia(coords) {
         if (!CONFIG.minhasCoords || !coords) return Infinity;
@@ -75,14 +93,33 @@
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    // ========== FUNÇÃO GETICONE ATUALIZADA COM BONECO ==========
     function getIcone(nome, q) {
         const s = q === 'refined' ? 'refined' : q === 'polished' ? 'polished' : 'shoddy';
-        const nomes   = ['long_sword','sword','shield','armor','helmet','axe','spear','bow','staff','book','crown','sceptre','amulet','ring','chalice','jewel'];
-        const palavras= ['espada longa','espada','escudo','armadura','capacete','machado','lança','arco','cajado','livro','coroa','cetro','amuleto','anel','cálice','joia'];
+        const nomes   = [
+            'long_sword', 'sword', 'shield', 'armor', 'helmet', 
+            'axe', 'spear', 'bow', 'staff', 'book', 
+            'crown', 'sceptre', 'amulet', 'ring', 'chalice', 
+            'jewel', 'doll', 'skull', 'mask', 'totem',
+            'boneco', 'figurine', 'statue'
+        ];
+        const palavras = [
+            'espada longa', 'espada', 'escudo', 'armadura', 'capacete',
+            'machado', 'lança', 'arco', 'cajado', 'livro',
+            'coroa', 'cetro', 'amuleto', 'anel', 'cálice',
+            'joia', 'boneco', 'caveira', 'máscara', 'totem',
+            'boneco', 'figura', 'estátua'
+        ];
+        
         const n = (nome || '').toLowerCase();
-        for (let i = 0; i < palavras.length; i++)
-            if (n.includes(palavras[i]))
+        
+        for (let i = 0; i < palavras.length; i++) {
+            if (n.includes(palavras[i])) {
                 return `https://dsbr.innogamescdn.com/asset/c9b60b77/graphic/relic_system/relics_46/relic_${nomes[i]}_${s}.webp`;
+            }
+        }
+        
+        // Fallback genérico
         return `https://dsbr.innogamescdn.com/asset/c9b60b77/graphic/relic_system/relics_46/relic_${s}.webp`;
     }
 
@@ -179,7 +216,8 @@
                 /Defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
                 /Defender:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
                 /Aldeia do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
-                /Vila do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i
+                /Vila do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Destino:?\s*([^(]+)\((\d+)\|(\d+)\)/i  // Adicionado "Destino"
             ];
             
             for (const padrao of padroesDefensor) {
@@ -205,7 +243,7 @@
                     const parentSection = link.closest('td, div, table');
                     if (parentSection) {
                         const sectionText = parentSection.textContent;
-                        if (sectionText.match(/Defensor|Defender|Defendido|Defendeu/i)) {
+                        if (sectionText.match(/Defensor|Defender|Defendido|Defendeu|Destino/i)) {
                             return {
                                 coordinates: `${coordMatch[1]}|${coordMatch[2]}`,
                                 villageName: linkText.replace(/\d+\|\d+/, '').trim() || 'Desconhecida'
@@ -271,7 +309,7 @@
             let q = 'cinza';
             if (el.classList.contains('relic-quality-refined'))  q = 'refined';
             else if (el.classList.contains('relic-quality-polished')) q = 'polished';
-            else q = determinarQualidade(nome);
+            else q = determinarQualidade(nome); // Usa nossa função melhorada
 
             const imgEl = el.querySelector('img') || el.closest('td')?.querySelector('img[src*="relic"]');
             const imagemUrl = (imgEl && imgEl.src) ? imgEl.src : getIcone(nome, q);
