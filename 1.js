@@ -112,7 +112,7 @@
         return [...paginas];
     }
 
-    // ========== FETCH DE PÁGINA DE RELATÓRIOS (usando fetch nativo) ==========
+    // ========== FETCH DE PÁGINA DE RELATÓRIOS ==========
     async function fetchPaginaRelatorios(url) {
         try {
             const response = await fetch(url, { credentials: 'include' });
@@ -266,14 +266,14 @@
         atualizarPainel();
         setStatus('ATIVO', '#16a34a');
 
-        setProgresso('🔍 A detetar páginas de relatórios...');
+        setProgresso('🔍 Detectando páginas de relatórios...');
 
         let todasUrls = new Set();
         let todosRelatorios = [];
 
         if (modoMultiPagina) {
             const paginasListagem = getPaginasLista();
-            setProgresso(`📄 ${paginasListagem.length} página(s) detetada(s). A recolher links...`);
+            setProgresso(`📄 ${paginasListagem.length} página(s) detectada(s). Coletando links...`);
 
             const paginasVistas = new Set();
             const fila = [...paginasListagem];
@@ -283,7 +283,7 @@
                 if (paginasVistas.has(url)) continue;
                 paginasVistas.add(url);
 
-                setProgresso(`📄 A ler página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
+                setProgresso(`📄 Lendo página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
 
                 const { relatorios, maisPaginas } = await fetchPaginaRelatorios(url);
 
@@ -313,14 +313,14 @@
         totalRelatorios = todosRelatorios.length;
 
         if (totalRelatorios === 0) {
-            alert('Nenhum relatório novo encontrado!\n\nSe já processaste todos, clica em 🗑️ LIMPAR para recomeçar.');
+            alert('Nenhum relatório novo encontrado!\n\nSe já processou todos, clique em 🗑️ LIMPAR para recomeçar.');
             scannerAtivo = false;
             atualizarPainel();
             setStatus('INATIVO', '#dc2626');
             return;
         }
 
-        setProgresso(`⚔️ ${totalRelatorios} relatórios encontrados. A processar com ${CONFIG.concorrencia} em paralelo...`);
+        setProgresso(`⚔️ ${totalRelatorios} relatórios encontrados. Processando com ${CONFIG.concorrencia} em paralelo...`);
         atualizarPainel();
 
         await processarComFila(todosRelatorios, CONFIG.concorrencia);
@@ -337,7 +337,7 @@
 
     function pararScanner() {
         scannerAtivo = false;
-        setProgresso('⏹ Parado pelo utilizador.');
+        setProgresso('⏹ Parado pelo usuário.');
         setStatus('INATIVO', '#dc2626');
         atualizarPainel();
     }
@@ -400,7 +400,7 @@
             container.innerHTML = `<div style="text-align:center;padding:55px 20px;background:#181828;border-radius:12px;border:2px dashed #252540;">
                 <div style="font-size:42px;opacity:0.3;margin-bottom:12px;">🔍</div>
                 <div style="color:#64748b;font-size:14px;">Nenhuma relíquia encontrada</div>
-                <div style="font-size:12px;color:#374151;margin-top:5px;">Inicia o scanner para varrer os relatórios</div>
+                <div style="font-size:12px;color:#374151;margin-top:5px;">Inicie o scanner para varrer os relatórios</div>
             </div>`;
             return;
         }
@@ -607,7 +607,7 @@
         document.getElementById('rp-coords-save').onclick = () => {
             const v = document.getElementById('relic-coords').value.trim();
             const m = v.match(/^(\d+)\|(\d+)$/);
-            if (m) { CONFIG.minhasCoords = { x: parseInt(m[1]), y: parseInt(m[2]) }; salvar(); atualizarLista(); alert(`✅ ${v} guardado!`); }
+            if (m) { CONFIG.minhasCoords = { x: parseInt(m[1]), y: parseInt(m[2]) }; salvar(); atualizarLista(); alert(`✅ ${v} salvo!`); }
             else alert('Formato: 500|500');
         };
 
@@ -619,7 +619,7 @@
         document.getElementById('rp-ord-tempo').onclick     = () => { ordenacao = 'tempo';     atualizarOrdenacao(); atualizarLista(); };
         document.getElementById('rp-ord-qualidade').onclick = () => { ordenacao = 'qualidade'; atualizarOrdenacao(); atualizarLista(); };
         document.getElementById('rp-ord-distancia').onclick = () => {
-            if (!CONFIG.minhasCoords) { alert('Define as tuas coordenadas primeiro!'); return; }
+            if (!CONFIG.minhasCoords) { alert('Defina suas coordenadas primeiro!'); return; }
             ordenacao = 'distancia'; atualizarOrdenacao(); atualizarLista();
         };
 
@@ -794,7 +794,7 @@ ${aldeias.map(al => {
   }).join('')}
   </tbody>
 </table>
-<div class="tip">💡 <b style="color:#ffd700;">Prioridade:</b> Aprimoradas 🔵 &gt; Básicas 🟢 &gt; Má Qualidade ⚪ · Mais próximas primeiro · Clica nas coordenadas para ir ao mapa · Clica no ID para ver o relatório original</div>
+<div class="tip">💡 <b style="color:#ffd700;">Prioridade:</b> Aprimoradas 🔵 &gt; Básicas 🟢 &gt; Má Qualidade ⚪ · Mais próximas primeiro · Clique nas coordenadas para ir ao mapa · Clique no ID para ver o relatório original</div>
 </body></html>`);
         win.document.close();
     }
@@ -844,9 +844,9 @@ button{margin-top:10px;padding:9px 20px;background:#0369a1;color:#fff;border:non
 p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9px;}</style>
 </head><body>
 <h2>🔗 BB Code para o Fórum / Chat da Tribo</h2>
-<p>Pronto a colar directamente no fórum ou mensagens do Tribal Wars:</p>
+<p>Pronto para colar diretamente no fórum ou mensagens do Tribal Wars:</p>
 <textarea id="bb">${bb}</textarea>
-<button onclick="navigator.clipboard.writeText(document.getElementById('bb').value).then(()=>this.textContent='✅ Copiado!').catch(()=>alert('Seleciona o texto manualmente'))">📋 Copiar tudo</button>
+<button onclick="navigator.clipboard.writeText(document.getElementById('bb').value).then(()=>this.textContent='✅ Copiado!').catch(()=>alert('Selecione o texto manualmente'))">📋 Copiar tudo</button>
 </body></html>`);
         win.document.close();
     }
@@ -862,7 +862,7 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
             const dist = CONFIG.minhasCoords ? ` | 📏 ${calcularDistancia(r.defenderCoordinates).toFixed(1)}` : '';
             txt += `${e} ${i+1}. ${r.relic}\n   📍 ${r.defenderCoordinates || 'N/A'}  🏘️ ${r.defenderVillage || '—'}${dist}\n   🆔 #${r.reportId}\n\n`;
         });
-        navigator.clipboard.writeText(txt).then(() => alert('✅ Copiado!')).catch(() => prompt('Copia:', txt));
+        navigator.clipboard.writeText(txt).then(() => alert('✅ Copiado!')).catch(() => prompt('Copie:', txt));
     }
 
     // ========== LIMPAR ==========
