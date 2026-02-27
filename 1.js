@@ -449,6 +449,7 @@
         });
     }
 
+    // ========== FUNÇÃO ATUALIZAR LISTA COM "VER RELATÓRIO" ==========
     function atualizarLista() {
         const container = document.getElementById('rp-lista');
         const contador  = document.getElementById('rp-contador');
@@ -497,7 +498,8 @@
                         ${mapUrl ? `<a href="${mapUrl}" target="_blank" style="color:#22c55e;font-weight:700;text-decoration:none;">📍 ${coords}</a>` : `<span style="color:#22c55e;font-weight:700;">📍 ${coords}</span>`}
                         <span style="color:#9ca3af;">🏘️ ${vila}</span>
                         ${distStr}
-                        <a href="${rel.reportUrl || '#'}" target="_blank" style="color:#4a5568;font-size:11px;text-decoration:none;" title="Ver relatório original">🆔 #${rel.reportId}</a>
+                        <!-- Link VER RELATÓRIO em vez do ID -->
+                        <a href="${rel.reportUrl || '#'}" target="_blank" style="color:#4a5568;font-size:11px;text-decoration:none;background:#1f2937;padding:3px 8px;border-radius:4px;border:1px solid #3a3a5a;" title="Ver relatório original">📋 VER RELATÓRIO</a>
                     </div>
                 </div>
                 <button onclick="window.relicToggle('${uid}')" title="${isCol ? 'Desmarcar' : 'Marcar como coletada'}"
