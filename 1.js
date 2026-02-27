@@ -1,4 +1,4 @@
-// Coletor de Relíquias - Tribal Wars BR v1 - Versão Bookmarklet
+// Coletor de Relíquias - Tribal Wars BR v5 - Versão Bookmarklet
 (function() {
     'use strict';
 
@@ -168,32 +168,95 @@
         }
     }
 
-    // ========== ANÁLISE DO RELATÓRIO ==========
+    // ========== ANÁLISE DO RELATÓRIO - CORRIGIDO ==========
     function extractDefenderCoords(doc) {
         try {
-            const links = doc.querySelectorAll('a[href*="info_village"], a[href*="screen=info_village"]');
-            for (const l of links) {
-                const m = l.textContent.match(/(\d+)\|(\d+)/);
-                if (m) return { coordinates: `${m[1]}|${m[2]}`, villageName: l.closest('td')?.textContent?.trim()?.split('\n')[0] || l.textContent.trim() };
-            }
-            const txt = doc.body?.innerText || doc.body?.textContent || '';
-            const pats = [
-                /Defensor[^(]*\((\d+)\|(\d+)\)/i,
-                /Defender[^(]*\((\d+)\|(\d+)\)/i,
-                /Aldeia[^(]*\((\d+)\|(\d+)\)/i,
-                /\((\d+)\|(\d+)\)/,
+            // Primeiro: tentar encontrar o defensor pelo texto específico
+            const bodyText = doc.body?.innerText || doc.body?.textContent || '';
+            
+            // Padrões específicos para encontrar o DEFENSOR (quem tem as relíquias)
+            const padroesDefensor = [
+                /Defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Defender:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Aldeia do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Vila do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i
             ];
-            for (const p of pats) {
-                const m = txt.match(p);
-                if (m) return { coordinates: `${m[1]}|${m[2]}`, villageName: 'Desconhecida' };
+            
+            for (const padrao of padroesDefensor) {
+                const match = bodyText.match(padrao);
+                if (match) {
+                    return {
+                        coordinates: `${match[2]}|${match[3]}`,
+                        villageName: match[1].trim()
+                    };
+                }
             }
-        } catch(e) {}
+            
+            // Segunda tentativa: procurar por links de info_village que geralmente são do defensor
+            const links = doc.querySelectorAll('a[href*="info_village"], a[href*="screen=info_village"]');
+            
+            // Priorizar links que estão próximos de texto "Defensor" ou "Defender"
+            for (const link of links) {
+                const linkText = link.textContent;
+                const coordMatch = linkText.match(/(\d+)\|(\d+)/);
+                
+                if (coordMatch) {
+                    // Verificar se este link está em uma seção que parece ser do defensor
+                    const parentSection = link.closest('td, div, table');
+                    if (parentSection) {
+                        const sectionText = parentSection.textContent;
+                        if (sectionText.match(/Defensor|Defender|Defendido|Defendeu/i)) {
+                            return {
+                                coordinates: `${coordMatch[1]}|${coordMatch[2]}`,
+                                villageName: linkText.replace(/\d+\|\d+/, '').trim() || 'Desconhecida'
+                            };
+                        }
+                    }
+                }
+            }
+            
+            // Terceira tentativa: procurar por qualquer coordenada que NÃO seja do atacante
+            // Muitas vezes o atacante aparece primeiro, então o defensor é a segunda coordenada
+            const todosMatches = [...bodyText.matchAll(/\((\d+)\|(\d+)\)/g)];
+            
+            if (todosMatches.length >= 2) {
+                // Pular o primeiro match (geralmente é o atacante) e pegar o segundo
+                const segundoMatch = todosMatches[1];
+                // Tentar encontrar o nome da vila antes da coordenada
+                const textBefore = bodyText.substring(Math.max(0, segundoMatch.index - 50), segundoMatch.index);
+                const nameMatch = textBefore.match(/([A-Za-zÀ-ÖØ-öø-ÿ0-9\s\-]{3,50})$/);
+                
+                return {
+                    coordinates: `${segundoMatch[1]}|${segundoMatch[2]}`,
+                    villageName: nameMatch ? nameMatch[1].trim() : 'Desconhecida'
+                };
+            }
+            
+            // Última tentativa: qualquer coordenada que encontrar
+            if (todosMatches.length > 0) {
+                const primeiroMatch = todosMatches[0];
+                return {
+                    coordinates: `${primeiroMatch[1]}|${primeiroMatch[2]}`,
+                    villageName: 'Desconhecida'
+                };
+            }
+            
+        } catch(e) {
+            console.error('Erro ao extrair coordenadas:', e);
+        }
         return null;
     }
 
     function analisarRelatorio(doc, relatorio) {
         const relics   = [];
         const defInfo  = extractDefenderCoords(doc);
+
+        // Log para debug
+        if (defInfo) {
+            console.log(`[DEBUG] Relatório ${relatorio.id} - Defensor: ${defInfo.villageName} (${defInfo.coordinates})`);
+        } else {
+            console.log(`[DEBUG] Relatório ${relatorio.id} - Não foi possível encontrar coordenadas do defensor`);
+        }
 
         const elementos = doc.querySelectorAll(
             '.relic-quality-shoddy, .relic-quality-polished, .relic-quality-refined, ' +
@@ -513,7 +576,7 @@
         p.innerHTML = `
         <div class="rp-header">
             <span style="font-size:19px;">⚔️</span>
-            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v0.1</span></span>
+            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v5</span></span>
             <span id="rp-status" style="font-size:11px;padding:3px 11px;background:#dc2626;color:#fff;border-radius:20px;font-weight:700;">INATIVO</span>
             <button id="rp-close" style="margin-left:9px;background:#1f1f35;border:none;color:#9ca3af;font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:6px;">✖</button>
         </div>
@@ -897,4 +960,3 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
-
