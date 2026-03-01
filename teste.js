@@ -902,7 +902,7 @@ ${aldeias.map(al => {
         win.document.close();
     }
 
-    // ========== BB CODE ==========
+    // ========== BB CODE CORRIGIDO - MOSTRA APENAS UMA VEZ CADA RELÍQUIA ==========
     function abrirBBCode() {
         const disponiveis = getReliquiasFiltradas().filter(r => !coletados.has(r.reportId + '_' + r.relic));
         if (disponiveis.length === 0) { alert('Nenhuma relíquia disponível com os filtros atuais.'); return; }
@@ -929,8 +929,24 @@ ${aldeias.map(al => {
             const dist = CONFIG.minhasCoords ? calcularDistancia(al.coords) : null;
             const distStr = dist && dist !== Infinity ? ` (${dist.toFixed(0)} campos)` : '';
             bb += `[coord]${x}|${y}[/coord]${distStr}: `;
-            al.reliquias.sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).forEach(r => {
-                const e = determinarQualidade(r.relic) === 'refined' ? '🔵' : determinarQualidade(r.relic) === 'polished' ? '🟢' : '⚪';
+            
+            // Agrupa relíquias por nome para evitar duplicatas
+            const reliquiasUnicas = {};
+            al.reliquias.forEach(r => {
+                if (!reliquiasUnicas[r.relic]) {
+                    reliquiasUnicas[r.relic] = r;
+                }
+            });
+            
+            // Converte para array e ordena por qualidade
+            const itemsUnicos = Object.values(reliquiasUnicas).sort((a, b) => 
+                qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))
+            );
+            
+            // Adiciona ao BB code - mostra apenas UMA VEZ cada relíquia
+            itemsUnicos.forEach(r => {
+                const e = determinarQualidade(r.relic) === 'refined' ? '🔵' : 
+                         determinarQualidade(r.relic) === 'polished' ? '🟢' : '⚪';
                 bb += `${e} ${r.relic}  `;
             });
             bb += '\n';
@@ -1000,5 +1016,3 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
-
-
