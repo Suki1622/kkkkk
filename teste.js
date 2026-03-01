@@ -1,4 +1,4 @@
-// Coletor de Relíquias - Tribal Wars BR v5 - Versão Bookmarklet
+// Coletor de Relíquias - Tribal Wars BR v0.1 - Versão Bookmarklet
 (function() {
     'use strict';
 
@@ -57,14 +57,32 @@
         return m ? m[1] : null;
     }
 
+    // ========== FUNÇÃO DETERMINAR QUALIDADE CORRIGIDA ==========
     function determinarQualidade(nome) {
         const n = (nome || '').toLowerCase();
-        if (n.includes('aprimorada') || n.includes('refined')) return 'refined';
-        if (n.includes('básica') || n.includes('basica') || n.includes('polished')) return 'polished';
+        
+        // PRIORIDADE MÁXIMA: Se tem "aprimorado" no nome, é AZUL (refined)
+        if (n.includes('aprimorado') || n.includes('aprimorada') || 
+            n.includes('refined') || n.includes('refinada') ||
+            n.includes('perfeito') || n.includes('perfeita') ||
+            n.includes('melhorado') || n.includes('melhorada')) {
+            return 'refined';
+        }
+        
+        // Básica / Polished (verde)
+        if (n.includes('básica') || n.includes('basica') || 
+            n.includes('básico') || n.includes('basico') ||
+            n.includes('polished')) {
+            return 'polished';
+        }
+        
+        // Má Qualidade / Shoddy (cinza)
         return 'cinza';
     }
 
-    function qualidadePeso(q) { return q === 'refined' ? 3 : q === 'polished' ? 2 : 1; }
+    function qualidadePeso(q) { 
+        return q === 'refined' ? 3 : q === 'polished' ? 2 : 1; 
+    }
 
     function calcularDistancia(coords) {
         if (!CONFIG.minhasCoords || !coords) return Infinity;
@@ -75,14 +93,33 @@
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    // ========== FUNÇÃO GETICONE ATUALIZADA COM BONECO ==========
     function getIcone(nome, q) {
         const s = q === 'refined' ? 'refined' : q === 'polished' ? 'polished' : 'shoddy';
-        const nomes   = ['long_sword','sword','shield','armor','helmet','axe','spear','bow','staff','book','crown','sceptre','amulet','ring','chalice','jewel'];
-        const palavras= ['espada longa','espada','escudo','armadura','capacete','machado','lança','arco','cajado','livro','coroa','cetro','amuleto','anel','cálice','joia'];
+        const nomes   = [
+            'long_sword', 'sword', 'shield', 'armor', 'helmet', 
+            'axe', 'spear', 'bow', 'staff', 'book', 
+            'crown', 'sceptre', 'amulet', 'ring', 'chalice', 
+            'jewel', 'doll', 'skull', 'mask', 'totem',
+            'boneco', 'figurine', 'statue'
+        ];
+        const palavras = [
+            'espada longa', 'espada', 'escudo', 'armadura', 'capacete',
+            'machado', 'lança', 'arco', 'cajado', 'livro',
+            'coroa', 'cetro', 'amuleto', 'anel', 'cálice',
+            'joia', 'boneco', 'caveira', 'máscara', 'totem',
+            'boneco', 'figura', 'estátua'
+        ];
+        
         const n = (nome || '').toLowerCase();
-        for (let i = 0; i < palavras.length; i++)
-            if (n.includes(palavras[i]))
+        
+        for (let i = 0; i < palavras.length; i++) {
+            if (n.includes(palavras[i])) {
                 return `https://dsbr.innogamescdn.com/asset/c9b60b77/graphic/relic_system/relics_46/relic_${nomes[i]}_${s}.webp`;
+            }
+        }
+        
+        // Fallback genérico
         return `https://dsbr.innogamescdn.com/asset/c9b60b77/graphic/relic_system/relics_46/relic_${s}.webp`;
     }
 
@@ -112,7 +149,7 @@
         return [...paginas];
     }
 
-    // ========== FETCH DE PÁGINA DE RELATÓRIOS (usando fetch nativo) ==========
+    // ========== FETCH DE PÁGINA DE RELATÓRIOS ==========
     async function fetchPaginaRelatorios(url) {
         try {
             const response = await fetch(url, { credentials: 'include' });
@@ -168,32 +205,96 @@
         }
     }
 
-    // ========== ANÁLISE DO RELATÓRIO ==========
+    // ========== ANÁLISE DO RELATÓRIO - CORRIGIDO ==========
     function extractDefenderCoords(doc) {
         try {
-            const links = doc.querySelectorAll('a[href*="info_village"], a[href*="screen=info_village"]');
-            for (const l of links) {
-                const m = l.textContent.match(/(\d+)\|(\d+)/);
-                if (m) return { coordinates: `${m[1]}|${m[2]}`, villageName: l.closest('td')?.textContent?.trim()?.split('\n')[0] || l.textContent.trim() };
-            }
-            const txt = doc.body?.innerText || doc.body?.textContent || '';
-            const pats = [
-                /Defensor[^(]*\((\d+)\|(\d+)\)/i,
-                /Defender[^(]*\((\d+)\|(\d+)\)/i,
-                /Aldeia[^(]*\((\d+)\|(\d+)\)/i,
-                /\((\d+)\|(\d+)\)/,
+            // Primeiro: tentar encontrar o defensor pelo texto específico
+            const bodyText = doc.body?.innerText || doc.body?.textContent || '';
+            
+            // Padrões específicos para encontrar o DEFENSOR (quem tem as relíquias)
+            const padroesDefensor = [
+                /Defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Defender:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Aldeia do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Vila do defensor:?\s*([^(]+)\((\d+)\|(\d+)\)/i,
+                /Destino:?\s*([^(]+)\((\d+)\|(\d+)\)/i  // Adicionado "Destino"
             ];
-            for (const p of pats) {
-                const m = txt.match(p);
-                if (m) return { coordinates: `${m[1]}|${m[2]}`, villageName: 'Desconhecida' };
+            
+            for (const padrao of padroesDefensor) {
+                const match = bodyText.match(padrao);
+                if (match) {
+                    return {
+                        coordinates: `${match[2]}|${match[3]}`,
+                        villageName: match[1].trim()
+                    };
+                }
             }
-        } catch(e) {}
+            
+            // Segunda tentativa: procurar por links de info_village que geralmente são do defensor
+            const links = doc.querySelectorAll('a[href*="info_village"], a[href*="screen=info_village"]');
+            
+            // Priorizar links que estão próximos de texto "Defensor" ou "Defender"
+            for (const link of links) {
+                const linkText = link.textContent;
+                const coordMatch = linkText.match(/(\d+)\|(\d+)/);
+                
+                if (coordMatch) {
+                    // Verificar se este link está em uma seção que parece ser do defensor
+                    const parentSection = link.closest('td, div, table');
+                    if (parentSection) {
+                        const sectionText = parentSection.textContent;
+                        if (sectionText.match(/Defensor|Defender|Defendido|Defendeu|Destino/i)) {
+                            return {
+                                coordinates: `${coordMatch[1]}|${coordMatch[2]}`,
+                                villageName: linkText.replace(/\d+\|\d+/, '').trim() || 'Desconhecida'
+                            };
+                        }
+                    }
+                }
+            }
+            
+            // Terceira tentativa: procurar por qualquer coordenada que NÃO seja do atacante
+            // Muitas vezes o atacante aparece primeiro, então o defensor é a segunda coordenada
+            const todosMatches = [...bodyText.matchAll(/\((\d+)\|(\d+)\)/g)];
+            
+            if (todosMatches.length >= 2) {
+                // Pular o primeiro match (geralmente é o atacante) e pegar o segundo
+                const segundoMatch = todosMatches[1];
+                // Tentar encontrar o nome da vila antes da coordenada
+                const textBefore = bodyText.substring(Math.max(0, segundoMatch.index - 50), segundoMatch.index);
+                const nameMatch = textBefore.match(/([A-Za-zÀ-ÖØ-öø-ÿ0-9\s\-]{3,50})$/);
+                
+                return {
+                    coordinates: `${segundoMatch[1]}|${segundoMatch[2]}`,
+                    villageName: nameMatch ? nameMatch[1].trim() : 'Desconhecida'
+                };
+            }
+            
+            // Última tentativa: qualquer coordenada que encontrar
+            if (todosMatches.length > 0) {
+                const primeiroMatch = todosMatches[0];
+                return {
+                    coordinates: `${primeiroMatch[1]}|${primeiroMatch[2]}`,
+                    villageName: 'Desconhecida'
+                };
+            }
+            
+        } catch(e) {
+            console.error('Erro ao extrair coordenadas:', e);
+        }
         return null;
     }
 
     function analisarRelatorio(doc, relatorio) {
         const relics   = [];
         const defInfo  = extractDefenderCoords(doc);
+
+        // Log para debug
+        if (defInfo) {
+            console.log(`[DEBUG] Relatório ${relatorio.id} - Defensor: ${defInfo.villageName} (${defInfo.coordinates})`);
+        } else {
+            console.log(`[DEBUG] Relatório ${relatorio.id} - Não foi possível encontrar coordenadas do defensor`);
+        }
 
         const elementos = doc.querySelectorAll(
             '.relic-quality-shoddy, .relic-quality-polished, .relic-quality-refined, ' +
@@ -208,7 +309,7 @@
             let q = 'cinza';
             if (el.classList.contains('relic-quality-refined'))  q = 'refined';
             else if (el.classList.contains('relic-quality-polished')) q = 'polished';
-            else q = determinarQualidade(nome);
+            else q = determinarQualidade(nome); // Usa nossa função melhorada
 
             const imgEl = el.querySelector('img') || el.closest('td')?.querySelector('img[src*="relic"]');
             const imagemUrl = (imgEl && imgEl.src) ? imgEl.src : getIcone(nome, q);
@@ -266,14 +367,14 @@
         atualizarPainel();
         setStatus('ATIVO', '#16a34a');
 
-        setProgresso('🔍 A detetar páginas de relatórios...');
+        setProgresso('🔍 Detectando páginas de relatórios...');
 
         let todasUrls = new Set();
         let todosRelatorios = [];
 
         if (modoMultiPagina) {
             const paginasListagem = getPaginasLista();
-            setProgresso(`📄 ${paginasListagem.length} página(s) detetada(s). A recolher links...`);
+            setProgresso(`📄 ${paginasListagem.length} página(s) detectada(s). Coletando links...`);
 
             const paginasVistas = new Set();
             const fila = [...paginasListagem];
@@ -283,7 +384,7 @@
                 if (paginasVistas.has(url)) continue;
                 paginasVistas.add(url);
 
-                setProgresso(`📄 A ler página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
+                setProgresso(`📄 Lendo página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
 
                 const { relatorios, maisPaginas } = await fetchPaginaRelatorios(url);
 
@@ -313,14 +414,14 @@
         totalRelatorios = todosRelatorios.length;
 
         if (totalRelatorios === 0) {
-            alert('Nenhum relatório novo encontrado!\n\nSe já processaste todos, clica em 🗑️ LIMPAR para recomeçar.');
+            alert('Nenhum relatório novo encontrado!\n\nSe já processou todos, clique em 🗑️ LIMPAR para recomeçar.');
             scannerAtivo = false;
             atualizarPainel();
             setStatus('INATIVO', '#dc2626');
             return;
         }
 
-        setProgresso(`⚔️ ${totalRelatorios} relatórios encontrados. A processar com ${CONFIG.concorrencia} em paralelo...`);
+        setProgresso(`⚔️ ${totalRelatorios} relatórios encontrados. Processando com ${CONFIG.concorrencia} em paralelo...`);
         atualizarPainel();
 
         await processarComFila(todosRelatorios, CONFIG.concorrencia);
@@ -337,7 +438,7 @@
 
     function pararScanner() {
         scannerAtivo = false;
-        setProgresso('⏹ Parado pelo utilizador.');
+        setProgresso('⏹ Parado pelo usuário.');
         setStatus('INATIVO', '#dc2626');
         atualizarPainel();
     }
@@ -386,6 +487,7 @@
         });
     }
 
+    // ========== FUNÇÃO ATUALIZAR LISTA COM "VER RELATÓRIO" ==========
     function atualizarLista() {
         const container = document.getElementById('rp-lista');
         const contador  = document.getElementById('rp-contador');
@@ -400,7 +502,7 @@
             container.innerHTML = `<div style="text-align:center;padding:55px 20px;background:#181828;border-radius:12px;border:2px dashed #252540;">
                 <div style="font-size:42px;opacity:0.3;margin-bottom:12px;">🔍</div>
                 <div style="color:#64748b;font-size:14px;">Nenhuma relíquia encontrada</div>
-                <div style="font-size:12px;color:#374151;margin-top:5px;">Inicia o scanner para varrer os relatórios</div>
+                <div style="font-size:12px;color:#374151;margin-top:5px;">Inicie o scanner para varrer os relatórios</div>
             </div>`;
             return;
         }
@@ -434,7 +536,8 @@
                         ${mapUrl ? `<a href="${mapUrl}" target="_blank" style="color:#22c55e;font-weight:700;text-decoration:none;">📍 ${coords}</a>` : `<span style="color:#22c55e;font-weight:700;">📍 ${coords}</span>`}
                         <span style="color:#9ca3af;">🏘️ ${vila}</span>
                         ${distStr}
-                        <a href="${rel.reportUrl || '#'}" target="_blank" style="color:#4a5568;font-size:11px;text-decoration:none;" title="Ver relatório original">🆔 #${rel.reportId}</a>
+                        <!-- Link VER RELATÓRIO em vez do ID -->
+                        <a href="${rel.reportUrl || '#'}" target="_blank" style="color:#4a5568;font-size:11px;text-decoration:none;background:#1f2937;padding:3px 8px;border-radius:4px;border:1px solid #3a3a5a;" title="Ver relatório original">📋 VER RELATÓRIO</a>
                     </div>
                 </div>
                 <button onclick="window.relicToggle('${uid}')" title="${isCol ? 'Desmarcar' : 'Marcar como coletada'}"
@@ -513,7 +616,7 @@
         p.innerHTML = `
         <div class="rp-header">
             <span style="font-size:19px;">⚔️</span>
-            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v5</span></span>
+            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v0.1</span></span>
             <span id="rp-status" style="font-size:11px;padding:3px 11px;background:#dc2626;color:#fff;border-radius:20px;font-weight:700;">INATIVO</span>
             <button id="rp-close" style="margin-left:9px;background:#1f1f35;border:none;color:#9ca3af;font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:6px;">✖</button>
         </div>
@@ -607,7 +710,7 @@
         document.getElementById('rp-coords-save').onclick = () => {
             const v = document.getElementById('relic-coords').value.trim();
             const m = v.match(/^(\d+)\|(\d+)$/);
-            if (m) { CONFIG.minhasCoords = { x: parseInt(m[1]), y: parseInt(m[2]) }; salvar(); atualizarLista(); alert(`✅ ${v} guardado!`); }
+            if (m) { CONFIG.minhasCoords = { x: parseInt(m[1]), y: parseInt(m[2]) }; salvar(); atualizarLista(); alert(`✅ ${v} salvo!`); }
             else alert('Formato: 500|500');
         };
 
@@ -619,7 +722,7 @@
         document.getElementById('rp-ord-tempo').onclick     = () => { ordenacao = 'tempo';     atualizarOrdenacao(); atualizarLista(); };
         document.getElementById('rp-ord-qualidade').onclick = () => { ordenacao = 'qualidade'; atualizarOrdenacao(); atualizarLista(); };
         document.getElementById('rp-ord-distancia').onclick = () => {
-            if (!CONFIG.minhasCoords) { alert('Define as tuas coordenadas primeiro!'); return; }
+            if (!CONFIG.minhasCoords) { alert('Defina suas coordenadas primeiro!'); return; }
             ordenacao = 'distancia'; atualizarOrdenacao(); atualizarLista();
         };
 
@@ -794,12 +897,12 @@ ${aldeias.map(al => {
   }).join('')}
   </tbody>
 </table>
-<div class="tip">💡 <b style="color:#ffd700;">Prioridade:</b> Aprimoradas 🔵 &gt; Básicas 🟢 &gt; Má Qualidade ⚪ · Mais próximas primeiro · Clica nas coordenadas para ir ao mapa · Clica no ID para ver o relatório original</div>
+<div class="tip">💡 <b style="color:#ffd700;">Prioridade:</b> Aprimoradas 🔵 &gt; Básicas 🟢 &gt; Má Qualidade ⚪ · Mais próximas primeiro · Clique nas coordenadas para ir ao mapa · Clique no ID para ver o relatório original</div>
 </body></html>`);
         win.document.close();
     }
 
-    // ========== BB CODE ==========
+    // ========== BB CODE CORRIGIDO - AGRUPA RELÍQUIAS IGUAIS ==========
     function abrirBBCode() {
         const disponiveis = getReliquiasFiltradas().filter(r => !coletados.has(r.reportId + '_' + r.relic));
         if (disponiveis.length === 0) { alert('Nenhuma relíquia disponível com os filtros atuais.'); return; }
@@ -826,9 +929,36 @@ ${aldeias.map(al => {
             const dist = CONFIG.minhasCoords ? calcularDistancia(al.coords) : null;
             const distStr = dist && dist !== Infinity ? ` (${dist.toFixed(0)} campos)` : '';
             bb += `[coord]${x}|${y}[/coord]${distStr}: `;
-            al.reliquias.sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).forEach(r => {
-                const e = determinarQualidade(r.relic) === 'refined' ? '🔵' : determinarQualidade(r.relic) === 'polished' ? '🟢' : '⚪';
-                bb += `${e} ${r.relic}  `;
+            
+            // ========== CORREÇÃO AQUI ==========
+            // Agrupa relíquias por nome e qualidade
+            const agrupadas = {};
+            al.reliquias.forEach(r => {
+                const chave = r.relic; // Usa o nome completo como chave
+                if (!agrupadas[chave]) {
+                    agrupadas[chave] = {
+                        relic: r.relic,
+                        qualidade: determinarQualidade(r.relic),
+                        count: 0
+                    };
+                }
+                agrupadas[chave].count++;
+            });
+            
+            // Converte para array e ordena por qualidade
+            const itemsAgrupados = Object.values(agrupadas).sort((a, b) => 
+                qualidadePeso(b.qualidade) - qualidadePeso(a.qualidade)
+            );
+            
+            // Adiciona ao BB code com contagem
+            itemsAgrupados.forEach(item => {
+                const e = item.qualidade === 'refined' ? '🔵' : 
+                         item.qualidade === 'polished' ? '🟢' : '⚪';
+                if (item.count > 1) {
+                    bb += `${e} ${item.relic} x${item.count}  `;
+                } else {
+                    bb += `${e} ${item.relic}  `;
+                }
             });
             bb += '\n';
         });
@@ -844,9 +974,9 @@ button{margin-top:10px;padding:9px 20px;background:#0369a1;color:#fff;border:non
 p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9px;}</style>
 </head><body>
 <h2>🔗 BB Code para o Fórum / Chat da Tribo</h2>
-<p>Pronto a colar directamente no fórum ou mensagens do Tribal Wars:</p>
+<p>Pronto para colar diretamente no fórum ou mensagens do Tribal Wars:</p>
 <textarea id="bb">${bb}</textarea>
-<button onclick="navigator.clipboard.writeText(document.getElementById('bb').value).then(()=>this.textContent='✅ Copiado!').catch(()=>alert('Seleciona o texto manualmente'))">📋 Copiar tudo</button>
+<button onclick="navigator.clipboard.writeText(document.getElementById('bb').value).then(()=>this.textContent='✅ Copiado!').catch(()=>alert('Selecione o texto manualmente'))">📋 Copiar tudo</button>
 </body></html>`);
         win.document.close();
     }
@@ -862,7 +992,7 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
             const dist = CONFIG.minhasCoords ? ` | 📏 ${calcularDistancia(r.defenderCoordinates).toFixed(1)}` : '';
             txt += `${e} ${i+1}. ${r.relic}\n   📍 ${r.defenderCoordinates || 'N/A'}  🏘️ ${r.defenderVillage || '—'}${dist}\n   🆔 #${r.reportId}\n\n`;
         });
-        navigator.clipboard.writeText(txt).then(() => alert('✅ Copiado!')).catch(() => prompt('Copia:', txt));
+        navigator.clipboard.writeText(txt).then(() => alert('✅ Copiado!')).catch(() => prompt('Copie:', txt));
     }
 
     // ========== LIMPAR ==========
