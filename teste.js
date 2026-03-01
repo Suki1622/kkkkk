@@ -950,16 +950,7 @@ ${aldeias.map(al => {
                 qualidadePeso(b.qualidade) - qualidadePeso(a.qualidade)
             );
             
-            // Adiciona ao BB code com contagem
-            itemsAgrupados.forEach(item => {
-                const e = item.qualidade === 'refined' ? '🔵' : 
-                         item.qualidade === 'polished' ? '🟢' : '⚪';
-                    bb += `${e} ${item.relic}  `;
-            });
-            bb += '\n';
-        });
-
-        bb += `\n[i]Coletor de Relíquias v5 — ${new Date().toLocaleString()}[/i]`;
+        bb += `\n[i]Coletor de Relíquias v1 — ${new Date().toLocaleString()}[/i]`;
 
         const win = window.open('', '_blank', 'width=720,height=480');
         win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>BB Code</title>
@@ -1023,5 +1014,6 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
+
 
 
