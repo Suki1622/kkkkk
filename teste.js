@@ -902,7 +902,7 @@ ${aldeias.map(al => {
         win.document.close();
     }
 
-    // ========== BB CODE CORRIGIDO - MOSTRA APENAS UMA VEZ CADA RELÍQUIA ==========
+    // ========== BB CODE ==========
     function abrirBBCode() {
         const disponiveis = getReliquiasFiltradas().filter(r => !coletados.has(r.reportId + '_' + r.relic));
         if (disponiveis.length === 0) { alert('Nenhuma relíquia disponível com os filtros atuais.'); return; }
@@ -929,31 +929,9 @@ ${aldeias.map(al => {
             const dist = CONFIG.minhasCoords ? calcularDistancia(al.coords) : null;
             const distStr = dist && dist !== Infinity ? ` (${dist.toFixed(0)} campos)` : '';
             bb += `[coord]${x}|${y}[/coord]${distStr}: `;
-            
-            // Agrupa relíquias por nome e qualidade
-            const agrupadas = {};
-            al.reliquias.forEach(r => {
-                const chave = r.relic;
-                if (!agrupadas[chave]) {
-                    agrupadas[chave] = {
-                        relic: r.relic,
-                        qualidade: determinarQualidade(r.relic),
-                        count: 0
-                    };
-                }
-                agrupadas[chave].count++;
-            });
-            
-            // Converte para array e ordena por qualidade
-            const itemsAgrupados = Object.values(agrupadas).sort((a, b) => 
-                qualidadePeso(b.qualidade) - qualidadePeso(a.qualidade)
-            );
-            
-            // Adiciona ao BB code - mostra apenas UMA VEZ cada relíquia, SEM quantidade
-            itemsAgrupados.forEach(item => {
-                const e = item.qualidade === 'refined' ? '🔵' : 
-                         item.qualidade === 'polished' ? '🟢' : '⚪';
-                bb += `${e} ${item.relic}  `;
+            al.reliquias.sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).forEach(r => {
+                const e = determinarQualidade(r.relic) === 'refined' ? '🔵' : determinarQualidade(r.relic) === 'polished' ? '🟢' : '⚪';
+                bb += `${e} ${r.relic}  `;
             });
             bb += '\n';
         });
@@ -1022,3 +1000,5 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
+
+
