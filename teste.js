@@ -902,7 +902,7 @@ ${aldeias.map(al => {
         win.document.close();
     }
 
-    // ========== BB CODE CORRIGIDO - AGRUPA RELÍQUIAS IGUAIS ==========
+    // ========== BB CODE CORRIGIDO - MOSTRA APENAS UMA VEZ CADA RELÍQUIA ==========
     function abrirBBCode() {
         const disponiveis = getReliquiasFiltradas().filter(r => !coletados.has(r.reportId + '_' + r.relic));
         if (disponiveis.length === 0) { alert('Nenhuma relíquia disponível com os filtros atuais.'); return; }
@@ -930,11 +930,10 @@ ${aldeias.map(al => {
             const distStr = dist && dist !== Infinity ? ` (${dist.toFixed(0)} campos)` : '';
             bb += `[coord]${x}|${y}[/coord]${distStr}: `;
             
-            // ========== CORREÇÃO AQUI ==========
             // Agrupa relíquias por nome e qualidade
             const agrupadas = {};
             al.reliquias.forEach(r => {
-                const chave = r.relic; // Usa o nome completo como chave
+                const chave = r.relic;
                 if (!agrupadas[chave]) {
                     agrupadas[chave] = {
                         relic: r.relic,
@@ -950,7 +949,16 @@ ${aldeias.map(al => {
                 qualidadePeso(b.qualidade) - qualidadePeso(a.qualidade)
             );
             
-        bb += `\n[i]Coletor de Relíquias v1 — ${new Date().toLocaleString()}[/i]`;
+            // Adiciona ao BB code - mostra apenas UMA VEZ cada relíquia, SEM quantidade
+            itemsAgrupados.forEach(item => {
+                const e = item.qualidade === 'refined' ? '🔵' : 
+                         item.qualidade === 'polished' ? '🟢' : '⚪';
+                bb += `${e} ${item.relic}  `;
+            });
+            bb += '\n';
+        });
+
+        bb += `\n[i]Coletor de Relíquias v5 — ${new Date().toLocaleString()}[/i]`;
 
         const win = window.open('', '_blank', 'width=720,height=480');
         win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>BB Code</title>
@@ -1014,6 +1022,3 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
-
-
-
