@@ -1,4 +1,4 @@
-// Coletor de Relíquias - Tribal Wars BR v0.1 - Versão Bookmarklet
+// Coletor de Relíquias - Tribal Wars BR v0.1 - Versão Bookmarklet (Mobile/Desktop)
 (function() {
     'use strict';
 
@@ -555,7 +555,7 @@
         atualizarPainel();
     };
 
-    // ========== CRIAR PAINEL ==========
+    // ========== CRIAR PAINEL (VERSÃO MOBILE/DESKTOP) ==========
     function iniciarInterface() {
         carregar();
 
@@ -563,43 +563,290 @@
             const s = document.createElement('style');
             s.id = 'relic-styles';
             s.textContent = `
+            /* ESTILOS RESPONSIVOS - MOBILE E DESKTOP */
             #relic-panel {
-                position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-                width:1040px;max-width:97vw;height:820px;max-height:94vh;
-                background:#0c0c18;color:#e2e8f0;
-                border-radius:16px;border:1px solid #252545;
+                position:fixed;
+                top:50%;
+                left:50%;
+                transform:translate(-50%,-50%);
+                width:1040px;
+                max-width:97vw;
+                height:820px;
+                max-height:94vh;
+                background:#0c0c18;
+                color:#e2e8f0;
+                border-radius:16px;
+                border:1px solid #252545;
                 box-shadow:0 0 0 1px rgba(255,215,0,.12) inset,0 28px 70px rgba(0,0,0,.9);
-                z-index:9999999;display:flex;flex-direction:column;
-                overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;resize:both;
+                z-index:9999999;
+                display:flex;
+                flex-direction:column;
+                overflow:hidden;
+                font-family:'Segoe UI',system-ui,sans-serif;
+                resize:both;
             }
-            .rp-header{padding:13px 20px;background:#111122;border-bottom:2px solid #c9930a;display:flex;align-items:center;gap:11px;flex-shrink:0;}
-            .rp-body{flex:1;overflow-y:auto;padding:16px 20px;}
-            .rp-body::-webkit-scrollbar{width:5px;}
-            .rp-body::-webkit-scrollbar-thumb{background:#3a3a5a;border-radius:3px;}
-            .rp-footer{padding:11px 20px;background:#111122;border-top:2px solid #c9930a;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;}
-            .rp-stat{background:#181828;border:1px solid #222240;border-radius:10px;padding:11px;text-align:center;flex:1;}
-            .rp-stat-n{font-size:22px;font-weight:700;}
-            .rp-stat-l{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
-            .rp-btn{border:none;border-radius:9px;cursor:pointer;font-weight:700;font-size:12px;padding:9px 13px;
-                display:flex;align-items:center;justify-content:center;gap:5px;transition:opacity .15s,transform .1s;white-space:nowrap;}
-            .rp-btn:hover{opacity:.82;transform:translateY(-1px);}
-            .rp-card-list{min-height:120px;max-height:290px;overflow-y:auto;padding-right:2px;}
-            .rp-card-list::-webkit-scrollbar{width:4px;}
-            .rp-card-list::-webkit-scrollbar-thumb{background:#3a3a5a;border-radius:2px;}
-            .rp-cfg{display:flex;align-items:center;gap:9px;background:#181828;border:1px solid #222240;
-                border-radius:10px;padding:10px 14px;margin-bottom:13px;flex-wrap:wrap;}
-            .rp-inp{background:#0c0c18;color:#ffd700;border:1px solid #3a3a5a;border-radius:6px;
-                padding:5px 9px;font-size:14px;font-weight:700;text-align:center;}
-            .rp-inp:focus{outline:none;border-color:#c9930a;}
-            .rp-inp-sm{background:#0c0c18;color:#9ca3af;border:1px solid #3a3a5a;border-radius:6px;
-                padding:5px 9px;font-size:12px;text-align:center;}
-            .rp-filt{flex:1;min-width:95px;padding:8px 9px;border:2px solid transparent;border-radius:8px;
-                cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
-            .rp-bar-wrap{height:8px;background:#0c0c18;border-radius:4px;overflow:hidden;margin-top:5px;}
-            .rp-bar-fill{height:100%;background:linear-gradient(90deg,#16a34a,#86efac);border-radius:4px;transition:width .3s;}
-            .rp-sep{height:1px;background:#1a1a30;margin:12px 0;}
-            .rp-check{accent-color:#ffd700;width:15px;height:15px;cursor:pointer;}
-            @keyframes rpIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+            
+            /* Ajustes para mobile */
+            @media (max-width: 768px) {
+                #relic-panel {
+                    width:100vw;
+                    max-width:100vw;
+                    height:100vh;
+                    max-height:100vh;
+                    border-radius:0;
+                    top:0;
+                    left:0;
+                    transform:none;
+                }
+                
+                .rp-header {
+                    padding:8px 12px;
+                    flex-wrap:wrap;
+                }
+                
+                .rp-body {
+                    padding:10px 12px;
+                }
+                
+                .rp-footer {
+                    padding:8px 10px;
+                    gap:4px;
+                }
+                
+                .rp-footer .rp-btn {
+                    padding:8px 6px;
+                    font-size:11px;
+                }
+                
+                .rp-cfg {
+                    flex-wrap:wrap;
+                    padding:8px 10px;
+                }
+                
+                .rp-cfg input, .rp-cfg label {
+                    font-size:11px;
+                }
+                
+                .rp-stat {
+                    padding:6px 4px;
+                }
+                
+                .rp-stat-n {
+                    font-size:16px;
+                }
+                
+                .rp-stat-l {
+                    font-size:8px;
+                }
+                
+                #rp-lista {
+                    max-height:40vh;
+                }
+                
+                .rp-card {
+                    padding:8px 10px;
+                    gap:8px;
+                }
+                
+                .rp-card img {
+                    width:36px;
+                    height:36px;
+                }
+                
+                .rp-card .rp-coletado-badge {
+                    right:40px;
+                    font-size:8px;
+                }
+            }
+            
+            /* Ajustes para telas muito pequenas */
+            @media (max-width: 480px) {
+                .rp-card {
+                    flex-wrap:wrap;
+                }
+                
+                .rp-card > div:last-child {
+                    width:100%;
+                    display:flex;
+                    justify-content:flex-end;
+                }
+                
+                .rp-cfg {
+                    flex-direction:column;
+                    align-items:stretch;
+                }
+                
+                .rp-cfg > * {
+                    width:100%;
+                }
+                
+                .rp-footer {
+                    flex-wrap:wrap;
+                }
+                
+                .rp-footer .rp-btn {
+                    flex:1 1 calc(50% - 4px);
+                }
+            }
+            
+            /* Estilos mantidos */
+            .rp-header{
+                padding:13px 20px;
+                background:#111122;
+                border-bottom:2px solid #c9930a;
+                display:flex;
+                align-items:center;
+                gap:11px;
+                flex-shrink:0;
+            }
+            .rp-body{
+                flex:1;
+                overflow-y:auto;
+                padding:16px 20px;
+            }
+            .rp-body::-webkit-scrollbar{
+                width:5px;
+            }
+            .rp-body::-webkit-scrollbar-thumb{
+                background:#3a3a5a;
+                border-radius:3px;
+            }
+            .rp-footer{
+                padding:11px 20px;
+                background:#111122;
+                border-top:2px solid #c9930a;
+                display:flex;
+                gap:7px;
+                flex-wrap:wrap;
+                flex-shrink:0;
+            }
+            .rp-stat{
+                background:#181828;
+                border:1px solid #222240;
+                border-radius:10px;
+                padding:11px;
+                text-align:center;
+                flex:1;
+            }
+            .rp-stat-n{
+                font-size:22px;
+                font-weight:700;
+            }
+            .rp-stat-l{
+                font-size:10px;
+                color:#64748b;
+                text-transform:uppercase;
+                letter-spacing:.8px;
+                margin-top:2px;
+            }
+            .rp-btn{
+                border:none;
+                border-radius:9px;
+                cursor:pointer;
+                font-weight:700;
+                font-size:12px;
+                padding:9px 13px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:5px;
+                transition:opacity .15s,transform .1s;
+                white-space:nowrap;
+            }
+            .rp-btn:hover{
+                opacity:.82;
+                transform:translateY(-1px);
+            }
+            .rp-card-list{
+                min-height:120px;
+                max-height:290px;
+                overflow-y:auto;
+                padding-right:2px;
+            }
+            .rp-card-list::-webkit-scrollbar{
+                width:4px;
+            }
+            .rp-card-list::-webkit-scrollbar-thumb{
+                background:#3a3a5a;
+                border-radius:2px;
+            }
+            .rp-cfg{
+                display:flex;
+                align-items:center;
+                gap:9px;
+                background:#181828;
+                border:1px solid #222240;
+                border-radius:10px;
+                padding:10px 14px;
+                margin-bottom:13px;
+                flex-wrap:wrap;
+            }
+            .rp-inp{
+                background:#0c0c18;
+                color:#ffd700;
+                border:1px solid #3a3a5a;
+                border-radius:6px;
+                padding:5px 9px;
+                font-size:14px;
+                font-weight:700;
+                text-align:center;
+            }
+            .rp-inp:focus{
+                outline:none;
+                border-color:#c9930a;
+            }
+            .rp-inp-sm{
+                background:#0c0c18;
+                color:#9ca3af;
+                border:1px solid #3a3a5a;
+                border-radius:6px;
+                padding:5px 9px;
+                font-size:12px;
+                text-align:center;
+            }
+            .rp-filt{
+                flex:1;
+                min-width:95px;
+                padding:8px 9px;
+                border:2px solid transparent;
+                border-radius:8px;
+                cursor:pointer;
+                font-weight:700;
+                font-size:12px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                gap:5px;
+                transition:all .15s;
+            }
+            .rp-bar-wrap{
+                height:8px;
+                background:#0c0c18;
+                border-radius:4px;
+                overflow:hidden;
+                margin-top:5px;
+            }
+            .rp-bar-fill{
+                height:100%;
+                background:linear-gradient(90deg,#16a34a,#86efac);
+                border-radius:4px;
+                transition:width .3s;
+            }
+            .rp-sep{
+                height:1px;
+                background:#1a1a30;
+                margin:12px 0;
+            }
+            .rp-check{
+                accent-color:#ffd700;
+                width:15px;
+                height:15px;
+                cursor:pointer;
+            }
+            @keyframes rpIn{
+                from{opacity:0;transform:translateX(-10px)}
+                to{opacity:1;transform:translateX(0)}
+            }
             `;
             document.head.appendChild(s);
         }
@@ -624,7 +871,7 @@
         <div class="rp-body">
 
             <!-- Stats -->
-            <div style="display:flex;gap:8px;margin-bottom:13px;">
+            <div style="display:flex;gap:8px;margin-bottom:13px;flex-wrap:wrap;">
                 <div class="rp-stat"><div class="rp-stat-n" id="rp-s-proc" style="color:#22c55e;">0</div><div class="rp-stat-l">Processados</div></div>
                 <div class="rp-stat"><div class="rp-stat-n" id="rp-s-total" style="color:#9ca3af;">0</div><div class="rp-stat-l">Total</div></div>
                 <div class="rp-stat"><div class="rp-stat-n" id="rp-s-rel"  style="color:#ffd700;">0</div><div class="rp-stat-l">Relíquias</div></div>
@@ -642,7 +889,7 @@
                 <label style="display:flex;align-items:center;gap:5px;color:#9ca3af;font-size:11px;cursor:pointer;">
                     <input type="checkbox" id="relic-multipagina" class="rp-check" ${modoMultiPagina ? 'checked' : ''}> Todas as páginas
                 </label>
-                <div style="display:flex;align-items:center;gap:5px;margin-left:auto;">
+                <div style="display:flex;align-items:center;gap:5px;margin-left:auto;flex-wrap:wrap;">
                     <span style="color:#64748b;font-size:11px;">Minhas coords:</span>
                     <input type="text" id="relic-coords" class="rp-inp-sm" style="width:80px;" placeholder="500|500" value="${coordsStr}">
                     <button id="rp-coords-save" class="rp-btn" style="background:#2a2a45;color:#ffd700;padding:5px 10px;">💾</button>
@@ -655,7 +902,7 @@
                 <button id="rp-f-polished" class="rp-filt" style="background:#16a34a;color:#fff;">🟢 Básica</button>
                 <button id="rp-f-refined"  class="rp-filt" style="background:#2563eb;color:#fff;">🔵 Aprimorada</button>
                 <button id="rp-f-todos"    class="rp-filt" style="background:#3b3b5a;color:#ffd700;border-color:#ffd700;border-style:solid;">✨ Todos</button>
-                <div style="margin-left:auto;display:flex;gap:5px;">
+                <div style="margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;">
                     <button id="rp-ord-qualidade"  class="rp-btn" style="background:#4a4a6a;color:#ffd700;padding:6px 9px;font-size:11px;">⭐ Qualidade</button>
                     <button id="rp-ord-distancia"  class="rp-btn" style="background:#222235;color:#9ca3af;padding:6px 9px;font-size:11px;">📍 Distância</button>
                     <button id="rp-ord-tempo"      class="rp-btn" style="background:#222235;color:#9ca3af;padding:6px 9px;font-size:11px;">🕐 Recentes</button>
@@ -793,6 +1040,7 @@
         const refCoord = CONFIG.minhasCoords ? `${CONFIG.minhasCoords.x}|${CONFIG.minhasCoords.y}` : null;
 
         win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relíquias — TW BR</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -808,12 +1056,12 @@ h2{color:#ffd700;font-size:14px;margin:20px 0 9px;display:flex;align-items:cente
 .polished{background:#14532d;color:#86efac;}
 .cinza{background:#1f2937;color:#9ca3af;}
 .tipos{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:7px;margin-bottom:6px;}
-.tipo-row{background:#181828;border:1px solid #222240;border-radius:7px;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.tipo-row{background:#181828;border:1px solid #222240;border-radius:7px;padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .aldeia{background:#181828;border:1px solid #222240;border-radius:10px;margin-bottom:12px;overflow:hidden;}
 .aldeia-h{padding:10px 14px;background:#1a1a30;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .aldeia-coords{color:#22c55e;font-weight:700;font-size:14px;}
 .aldeia-body{padding:10px 14px;display:flex;flex-direction:column;gap:6px;}
-.rel-row{display:flex;align-items:center;gap:9px;padding:6px 9px;background:#111120;border-radius:6px;}
+.rel-row{display:flex;align-items:center;gap:9px;padding:6px 9px;background:#111120;border-radius:6px;flex-wrap:wrap;}
 .rel-row.col{opacity:.4;}
 table{width:100%;border-collapse:collapse;background:#181828;border-radius:9px;overflow:hidden;}
 th{background:#1a1a30;color:#ffd700;padding:9px 11px;text-align:left;font-size:11px;}
@@ -823,6 +1071,14 @@ a{color:inherit;text-decoration:none;}
 a:hover{text-decoration:underline;}
 .tip{background:#181828;border:1px solid #c9930a;border-radius:7px;padding:11px;font-size:12px;color:#94a3b8;margin-top:16px;}
 @media print{body{background:#fff;color:#000;}}
+@media (max-width: 768px){
+    body{padding:10px;}
+    .stats{gap:5px;}
+    .stat{padding:8px;}
+    .stat-n{font-size:18px;}
+    .aldeia-h{flex-direction:column;align-items:flex-start;}
+    table{display:block;overflow-x:auto;}
+}
 </style></head><body>
 <h1>⚔️ Relatório de Relíquias — Tribal Wars BR</h1>
 <p style="color:#64748b;font-size:12px;margin-bottom:14px;">
@@ -898,6 +1154,7 @@ ${aldeias.map(al => {
 }).join('')}
 
 <h2>📋 Lista Completa <span style="font-size:11px;color:#64748b;font-weight:400;">— ordenado por qualidade (sem duplicatas por coordenada)</span></h2>
+<div style="overflow-x:auto;">
 <table>
   <thead><tr>
     <th>#</th><th>Relíquia</th><th>Qualidade</th><th>Coordenadas</th><th>Vila</th>
@@ -942,6 +1199,7 @@ ${aldeias.map(al => {
   })()}
   </tbody>
 </table>
+</div>
 <div class="tip">💡 <b style="color:#ffd700;">Relatório simplificado:</b> Mostra apenas UMA VEZ cada tipo de relíquia por coordenada. O total de relíquias encontradas é ${todos.length}, mas exibimos apenas os tipos únicos para facilitar a visualização.</div>
 </body></html>`);
         win.document.close();
@@ -1000,12 +1258,22 @@ ${aldeias.map(al => {
         bb += `\n[i]Coletor de Relíquias v5 — ${new Date().toLocaleString()}[/i]`;
 
         const win = window.open('', '_blank', 'width=720,height=480');
-        win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>BB Code</title>
-<style>body{font-family:monospace;background:#0c0c18;color:#e2e8f0;padding:22px;}
+        win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BB Code</title>
+<style>
+*{box-sizing:border-box;}
+body{font-family:monospace;background:#0c0c18;color:#e2e8f0;padding:22px;}
 h2{color:#ffd700;margin-bottom:12px;font-family:'Segoe UI',sans-serif;}
 textarea{width:100%;height:300px;background:#181828;color:#e2e8f0;border:1px solid #3a3a5a;border-radius:7px;padding:12px;font-family:monospace;font-size:12px;resize:vertical;}
 button{margin-top:10px;padding:9px 20px;background:#0369a1;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:700;font-family:'Segoe UI',sans-serif;}
-p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9px;}</style>
+p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9px;}
+@media (max-width: 768px){
+    body{padding:10px;}
+    textarea{height:200px;}
+    button{width:100%;}
+}
+</style>
 </head><body>
 <h2>🔗 BB Code para o Fórum / Chat da Tribo</h2>
 <p>Pronto para colar diretamente no fórum ou mensagens do Tribal Wars:</p>
