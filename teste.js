@@ -954,7 +954,6 @@ ${aldeias.map(al => {
             itemsAgrupados.forEach(item => {
                 const e = item.qualidade === 'refined' ? '🔵' : 
                          item.qualidade === 'polished' ? '🟢' : '⚪';
-                    bb += `${e} ${item.relic} x${item.count}  `;
                     bb += `${e} ${item.relic}  `;
             });
             bb += '\n';
@@ -1024,4 +1023,5 @@ p{color:#64748b;font-size:12px;font-family:'Segoe UI',sans-serif;margin-bottom:9
     else { criarBotao(); iniciarInterface(); }
 
 })();
+
 
