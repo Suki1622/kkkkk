@@ -733,7 +733,7 @@
         atualizarPainel();
     }
 
-    // ========== RELATÓRIO COMPLETO ==========
+    // ========== RELATÓRIO COMPLETO CORRIGIDO - MOSTRA APENAS UMA VEZ CADA RELÍQUIA POR COORDENADA ==========
     function abrirRelatorio() {
         if (resultadosEncontrados.length === 0) { alert('Nenhuma relíquia encontrada ainda.'); return; }
 
@@ -741,20 +741,42 @@
         const grupos = { refined: [], polished: [], cinza: [] };
         todos.forEach(r => grupos[determinarQualidade(r.relic)].push(r));
 
+        // Agrupa por aldeia e remove duplicatas de relíquias na mesma coordenada
         const porAldeia = {};
         todos.forEach(r => {
             const k = r.defenderCoordinates || 'Desconhecida';
-            if (!porAldeia[k]) porAldeia[k] = { coords: k, vila: r.defenderVillage || '—', reliquias: [], coletadas: 0 };
+            if (!porAldeia[k]) {
+                porAldeia[k] = { 
+                    coords: k, 
+                    vila: r.defenderVillage || '—', 
+                    reliquias: [], 
+                    coletadas: 0,
+                    reliquiasUnicas: {} // Para agrupar por nome
+                };
+            }
+            
+            // Usa o nome como chave para evitar duplicatas na mesma coordenada
+            if (!porAldeia[k].reliquiasUnicas[r.relic]) {
+                porAldeia[k].reliquiasUnicas[r.relic] = r;
+            }
+            
             porAldeia[k].reliquias.push(r);
             if (coletados.has(r.reportId + '_' + r.relic)) porAldeia[k].coletadas++;
         });
 
-        const aldeias = Object.values(porAldeia).sort((a, b) => {
-            const ra = a.reliquias.filter(r => determinarQualidade(r.relic) === 'refined').length;
-            const rb = b.reliquias.filter(r => determinarQualidade(r.relic) === 'refined').length;
-            return rb !== ra ? rb - ra : b.reliquias.length - a.reliquias.length;
+        // Converte o objeto de relíquias únicas para array
+        Object.keys(porAldeia).forEach(k => {
+            porAldeia[k].reliquiasUnicasArray = Object.values(porAldeia[k].reliquiasUnicas);
         });
 
+        // Ordena aldeias por quantidade de relíquias aprimoradas
+        const aldeias = Object.values(porAldeia).sort((a, b) => {
+            const ra = a.reliquiasUnicasArray.filter(r => determinarQualidade(r.relic) === 'refined').length;
+            const rb = b.reliquiasUnicasArray.filter(r => determinarQualidade(r.relic) === 'refined').length;
+            return rb !== ra ? rb - ra : b.reliquiasUnicasArray.length - a.reliquiasUnicasArray.length;
+        });
+
+        // Agrupa por tipo (para estatísticas gerais)
         const porTipo = {};
         todos.forEach(r => {
             const q    = determinarQualidade(r.relic);
@@ -762,6 +784,7 @@
             if (!porTipo[base]) porTipo[base] = { refined: 0, polished: 0, cinza: 0 };
             porTipo[base][q]++;
         });
+        
         const tipos = Object.entries(porTipo).sort((a, b) =>
             (b[1].refined*3 + b[1].polished*2 + b[1].cinza) - (a[1].refined*3 + a[1].polished*2 + a[1].cinza)
         );
@@ -829,14 +852,22 @@ ${tipos.map(([tipo, d]) => `
   </div>`).join('')}
 </div>
 
-<h2>🏘️ Por Aldeia <span style="font-size:11px;color:#64748b;font-weight:400;">— ordenado por aprimoradas primeiro</span></h2>
+<h2>🏘️ Por Aldeia <span style="font-size:11px;color:#64748b;font-weight:400;">— ordenado por aprimoradas primeiro (sem duplicatas)</span></h2>
 ${aldeias.map(al => {
-    const nR = al.reliquias.filter(r => determinarQualidade(r.relic) === 'refined').length;
-    const nP = al.reliquias.filter(r => determinarQualidade(r.relic) === 'polished').length;
-    const nC = al.reliquias.filter(r => determinarQualidade(r.relic) === 'cinza').length;
+    // Usa as relíquias únicas para os contadores
+    const relUnicas = al.reliquiasUnicasArray;
+    const nR = relUnicas.filter(r => determinarQualidade(r.relic) === 'refined').length;
+    const nP = relUnicas.filter(r => determinarQualidade(r.relic) === 'polished').length;
+    const nC = relUnicas.filter(r => determinarQualidade(r.relic) === 'cinza').length;
+    const totalUnicas = relUnicas.length;
+    
     const dist = CONFIG.minhasCoords ? calcularDistancia(al.coords) : null;
     const [cx, cy] = al.coords !== 'Desconhecida' ? al.coords.split('|') : [null,null];
     const mapUrl = cx ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx}&y=${cy}` : null;
+    
+    // Calcula coletadas únicas (se pelo menos uma daquele tipo foi coletada)
+    const coletadasUnicas = relUnicas.filter(r => coletados.has(r.reportId + '_' + r.relic)).length;
+    
     return `
   <div class="aldeia">
     <div class="aldeia-h">
@@ -846,10 +877,11 @@ ${aldeias.map(al => {
       ${nP > 0 ? `<span class="badge polished">🟢 ${nP}</span>` : ''}
       ${nC > 0 ? `<span class="badge cinza">⚪ ${nC}</span>`     : ''}
       ${dist && dist !== Infinity ? `<span style="color:#f97316;font-size:11px;">📏 ${dist.toFixed(1)} campos</span>` : ''}
-      ${al.coletadas > 0 ? `<span style="color:#22c55e;font-size:11px;">✅ ${al.coletadas}/${al.reliquias.length}</span>` : ''}
+      ${coletadasUnicas > 0 ? `<span style="color:#22c55e;font-size:11px;">✅ ${coletadasUnicas}/${totalUnicas}</span>` : ''}
+      <span style="color:#64748b;font-size:10px;margin-left:5px;">(${al.reliquias.length} total)</span>
     </div>
     <div class="aldeia-body">
-      ${al.reliquias.sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).map(r => {
+      ${relUnicas.sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).map(r => {
           const q   = determinarQualidade(r.relic);
           const cor = q === 'refined' ? '#3b82f6' : q === 'polished' ? '#22c55e' : '#6b7280';
           const uid = r.reportId + '_' + r.relic;
@@ -865,7 +897,7 @@ ${aldeias.map(al => {
   </div>`;
 }).join('')}
 
-<h2>📋 Lista Completa <span style="font-size:11px;color:#64748b;font-weight:400;">— ordenado por qualidade</span></h2>
+<h2>📋 Lista Completa <span style="font-size:11px;color:#64748b;font-weight:400;">— ordenado por qualidade (sem duplicatas por coordenada)</span></h2>
 <table>
   <thead><tr>
     <th>#</th><th>Relíquia</th><th>Qualidade</th><th>Coordenadas</th><th>Vila</th>
@@ -873,31 +905,44 @@ ${aldeias.map(al => {
     <th>Status</th><th>Relatório</th>
   </tr></thead>
   <tbody>
-  ${[...todos].sort((a,b) => qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))).map((r, i) => {
-      const q    = determinarQualidade(r.relic);
-      const cor  = q === 'refined' ? '#3b82f6' : q === 'polished' ? '#22c55e' : '#6b7280';
-      const lbl  = q === 'refined' ? 'Aprimorada' : q === 'polished' ? 'Básica' : 'Má Qualidade';
-      const e    = q === 'refined' ? '🔵' : q === 'polished' ? '🟢' : '⚪';
-      const coords = r.defenderCoordinates || 'N/A';
-      const vila   = r.defenderVillage || '—';
-      const uid    = r.reportId + '_' + r.relic;
-      const dist   = CONFIG.minhasCoords ? calcularDistancia(coords) : null;
-      const [cx2, cy2] = coords !== 'N/A' ? coords.split('|') : [null, null];
-      const mapUrl2 = cx2 ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx2}&y=${cy2}` : null;
-      return `<tr>
-        <td style="color:#4a5568;">${i+1}</td>
-        <td style="color:${cor};font-weight:600;">${r.relic}</td>
-        <td><span class="badge ${q}">${e} ${lbl}</span></td>
-        <td>${mapUrl2 ? `<a href="${mapUrl2}" target="_blank" style="color:#22c55e;font-weight:700;">${coords}</a>` : `<span style="color:#22c55e;font-weight:700;">${coords}</span>`}</td>
-        <td style="color:#9ca3af;">${vila}</td>
-        ${CONFIG.minhasCoords ? `<td style="color:#f97316;">${dist && dist !== Infinity ? dist.toFixed(1) : '—'}</td>` : ''}
-        <td>${coletados.has(uid) ? '<span style="color:#22c55e;">✅</span>' : '<span style="color:#4a5568;">—</span>'}</td>
-        <td><a href="${r.reportUrl || '#'}" target="_blank" style="color:#4a5568;">#${r.reportId}</a></td>
-      </tr>`;
-  }).join('')}
+  ${(() => {
+      // Cria um mapa para evitar duplicatas na lista completa
+      const unicasLista = {};
+      todos.forEach(r => {
+          const chave = r.defenderCoordinates + '_' + r.relic;
+          if (!unicasLista[chave]) {
+              unicasLista[chave] = r;
+          }
+      });
+      
+      return Object.values(unicasLista).sort((a,b) => 
+          qualidadePeso(determinarQualidade(b.relic)) - qualidadePeso(determinarQualidade(a.relic))
+      ).map((r, i) => {
+          const q    = determinarQualidade(r.relic);
+          const cor  = q === 'refined' ? '#3b82f6' : q === 'polished' ? '#22c55e' : '#6b7280';
+          const lbl  = q === 'refined' ? 'Aprimorada' : q === 'polished' ? 'Básica' : 'Má Qualidade';
+          const e    = q === 'refined' ? '🔵' : q === 'polished' ? '🟢' : '⚪';
+          const coords = r.defenderCoordinates || 'N/A';
+          const vila   = r.defenderVillage || '—';
+          const uid    = r.reportId + '_' + r.relic;
+          const dist   = CONFIG.minhasCoords ? calcularDistancia(coords) : null;
+          const [cx2, cy2] = coords !== 'N/A' ? coords.split('|') : [null, null];
+          const mapUrl2 = cx2 ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx2}&y=${cy2}` : null;
+          return `<tr>
+            <td style="color:#4a5568;">${i+1}</td>
+            <td style="color:${cor};font-weight:600;">${r.relic}</td>
+            <td><span class="badge ${q}">${e} ${lbl}</span></td>
+            <td>${mapUrl2 ? `<a href="${mapUrl2}" target="_blank" style="color:#22c55e;font-weight:700;">${coords}</a>` : `<span style="color:#22c55e;font-weight:700;">${coords}</span>`}</td>
+            <td style="color:#9ca3af;">${vila}</td>
+            ${CONFIG.minhasCoords ? `<td style="color:#f97316;">${dist && dist !== Infinity ? dist.toFixed(1) : '—'}</td>` : ''}
+            <td>${coletados.has(uid) ? '<span style="color:#22c55e;">✅</span>' : '<span style="color:#4a5568;">—</span>'}</td>
+            <td><a href="${r.reportUrl || '#'}" target="_blank" style="color:#4a5568;">#${r.reportId}</a></td>
+          </tr>`;
+      }).join('');
+  })()}
   </tbody>
 </table>
-<div class="tip">💡 <b style="color:#ffd700;">Prioridade:</b> Aprimoradas 🔵 &gt; Básicas 🟢 &gt; Má Qualidade ⚪ · Mais próximas primeiro · Clique nas coordenadas para ir ao mapa · Clique no ID para ver o relatório original</div>
+<div class="tip">💡 <b style="color:#ffd700;">Relatório simplificado:</b> Mostra apenas UMA VEZ cada tipo de relíquia por coordenada. O total de relíquias encontradas é ${todos.length}, mas exibimos apenas os tipos únicos para facilitar a visualização.</div>
 </body></html>`);
         win.document.close();
     }
