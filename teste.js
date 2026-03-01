@@ -15,6 +15,7 @@
         delayEntrePaginas: 800,
         timeoutRelatorio: 12000,
         minhasCoords: null,
+        mundoUrl: window.location.origin // Captura o URL base do mundo atual (ex: https://br140.tribalwars.com.br)
     };
 
     // ========== ESTADO ==========
@@ -367,14 +368,16 @@
         atualizarPainel();
         setStatus('ATIVO', '#16a34a');
 
-        setProgresso('🔍 Detectando páginas de relatórios...');
+        // NOVO: Detecta e exibe o mundo atual
+        const mundoAtual = CONFIG.mundoUrl.replace('https://', '').split('.')[0];
+        setProgresso(`🌍 Mundo detectado: ${mundoAtual} - 🔍 Detectando páginas de relatórios...`);
 
         let todasUrls = new Set();
         let todosRelatorios = [];
 
         if (modoMultiPagina) {
             const paginasListagem = getPaginasLista();
-            setProgresso(`📄 ${paginasListagem.length} página(s) detectada(s). Coletando links...`);
+            setProgresso(`🌍 ${mundoAtual} | 📄 ${paginasListagem.length} página(s) detectada(s). Coletando links...`);
 
             const paginasVistas = new Set();
             const fila = [...paginasListagem];
@@ -384,7 +387,7 @@
                 if (paginasVistas.has(url)) continue;
                 paginasVistas.add(url);
 
-                setProgresso(`📄 Lendo página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
+                setProgresso(`🌍 ${mundoAtual} | 📄 Lendo página ${paginasVistas.size}/${paginasVistas.size + fila.length}... (${todosRelatorios.length} relatórios até agora)`);
 
                 const { relatorios, maisPaginas } = await fetchPaginaRelatorios(url);
 
@@ -421,7 +424,7 @@
             return;
         }
 
-        setProgresso(`⚔️ ${totalRelatorios} relatórios encontrados. Processando com ${CONFIG.concorrencia} em paralelo...`);
+        setProgresso(`🌍 ${mundoAtual} | ⚔️ ${totalRelatorios} relatórios encontrados. Processando com ${CONFIG.concorrencia} em paralelo...`);
         atualizarPainel();
 
         await processarComFila(todosRelatorios, CONFIG.concorrencia);
@@ -433,7 +436,7 @@
 
         const nRel = resultadosEncontrados.length;
         const nRefined = resultadosEncontrados.filter(r => determinarQualidade(r.relic) === 'refined').length;
-        setProgresso(`✅ Concluído! ${relatoriosProcessados} relatórios | ${nRel} relíquias (${nRefined} aprimoradas 🔵)`);
+        setProgresso(`🌍 ${mundoAtual} | ✅ Concluído! ${relatoriosProcessados} relatórios | ${nRel} relíquias (${nRefined} aprimoradas 🔵)`);
     }
 
     function pararScanner() {
@@ -519,7 +522,7 @@
             const dist   = CONFIG.minhasCoords ? calcularDistancia(coords) : null;
             const distStr = (dist && dist !== Infinity) ? `<span style="color:#f97316;font-size:11px;">📏 ${dist.toFixed(1)}</span>` : '';
             const [cx, cy] = coords !== 'N/A' ? coords.split('|') : [null, null];
-            const mapUrl = cx ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx}&y=${cy}` : null;
+            const mapUrl = cx ? `${CONFIG.mundoUrl}/game.php?screen=map&x=${cx}&y=${cy}` : null;
 
             return `<div class="rp-card${isCol ? ' coletado' : ''}" style="border-left:5px solid ${cor};margin-bottom:9px;padding:11px 13px;background:#131323;border-radius:10px;display:flex;gap:12px;align-items:center;transition:transform .12s,opacity .2s;position:relative;${isCol ? 'opacity:.38;' : ''}" data-uid="${uid}">
                 ${isCol ? '<div style="position:absolute;top:50%;right:54px;transform:translateY(-50%);color:#22c55e;font-size:10px;font-weight:700;letter-spacing:1px;pointer-events:none;">✅ COLETADO</div>' : ''}
@@ -857,13 +860,15 @@
         document.getElementById('relic-panel')?.remove();
 
         const coordsStr = CONFIG.minhasCoords ? `${CONFIG.minhasCoords.x}|${CONFIG.minhasCoords.y}` : '';
+        const mundoAtual = CONFIG.mundoUrl.replace('https://', '').split('.')[0];
+        
         const p = document.createElement('div');
         p.id = 'relic-panel';
 
         p.innerHTML = `
         <div class="rp-header">
             <span style="font-size:19px;">⚔️</span>
-            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">v0.1</span></span>
+            <span style="font-size:17px;font-weight:700;color:#ffd700;flex:1;">Coletor de Relíquias <span style="font-size:12px;color:#64748b;">${mundoAtual}</span></span>
             <span id="rp-status" style="font-size:11px;padding:3px 11px;background:#dc2626;color:#fff;border-radius:20px;font-weight:700;">INATIVO</span>
             <button id="rp-close" style="margin-left:9px;background:#1f1f35;border:none;color:#9ca3af;font-size:15px;cursor:pointer;width:28px;height:28px;border-radius:6px;">✖</button>
         </div>
@@ -1038,10 +1043,11 @@
 
         const win = window.open('', '_blank', 'width=1150,height=800,scrollbars=yes');
         const refCoord = CONFIG.minhasCoords ? `${CONFIG.minhasCoords.x}|${CONFIG.minhasCoords.y}` : null;
+        const mundoAtual = CONFIG.mundoUrl.replace('https://', '').split('.')[0];
 
         win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relíquias — TW BR</title>
+<title>Relíquias — TW BR (${mundoAtual})</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#0c0c18;color:#e2e8f0;padding:22px;font-size:13px;}
@@ -1080,7 +1086,7 @@ a:hover{text-decoration:underline;}
     table{display:block;overflow-x:auto;}
 }
 </style></head><body>
-<h1>⚔️ Relatório de Relíquias — Tribal Wars BR</h1>
+<h1>⚔️ Relatório de Relíquias — ${mundoAtual.toUpperCase()}</h1>
 <p style="color:#64748b;font-size:12px;margin-bottom:14px;">
   ${new Date().toLocaleString()} &nbsp;·&nbsp;
   ${relatoriosProcessados} relatórios verificados &nbsp;·&nbsp;
@@ -1119,7 +1125,7 @@ ${aldeias.map(al => {
     
     const dist = CONFIG.minhasCoords ? calcularDistancia(al.coords) : null;
     const [cx, cy] = al.coords !== 'Desconhecida' ? al.coords.split('|') : [null,null];
-    const mapUrl = cx ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx}&y=${cy}` : null;
+    const mapUrl = cx ? `${CONFIG.mundoUrl}/game.php?screen=map&x=${cx}&y=${cy}` : null;
     
     // Calcula coletadas únicas (se pelo menos uma daquele tipo foi coletada)
     const coletadasUnicas = relUnicas.filter(r => coletados.has(r.reportId + '_' + r.relic)).length;
@@ -1184,7 +1190,7 @@ ${aldeias.map(al => {
           const uid    = r.reportId + '_' + r.relic;
           const dist   = CONFIG.minhasCoords ? calcularDistancia(coords) : null;
           const [cx2, cy2] = coords !== 'N/A' ? coords.split('|') : [null, null];
-          const mapUrl2 = cx2 ? `https://br140.tribalwars.com.br/game.php?screen=map&x=${cx2}&y=${cy2}` : null;
+          const mapUrl2 = cx2 ? `${CONFIG.mundoUrl}/game.php?screen=map&x=${cx2}&y=${cy2}` : null;
           return `<tr>
             <td style="color:#4a5568;">${i+1}</td>
             <td style="color:${cor};font-weight:600;">${r.relic}</td>
